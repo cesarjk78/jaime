@@ -36,94 +36,60 @@ public class PetServiceMockitoTest {
         this.petService = new PetServiceImpl(this.repository);
     }
 
-    /**
-     *
-     */
     @Test
     public void testFindPetById() {
 
-        //Pet petExpected = TObjectCreator.getPet();
-        Pet petExpected = new Pet(1,"Leo",1,1, null);
+        Pet petExpected = new Pet(1, "Leo", 1, 1, null);
 
         Mockito.when(this.repository.findById(1))
-                .thenReturn((Optional.of(petExpected)));
+                .thenReturn(Optional.of(petExpected));
 
         try {
-            petExpected = this.petService.findById(1);
+            Pet foundPet = this.petService.findById(1);
+            assertEquals(petExpected.getName(), foundPet.getName());
         } catch (PetNotFoundException e) {
             fail(e.getMessage());
         }
-
-        log.info("" + petExpected);
-        assertEquals(petExpected.getName(), petExpected.getName());
-
     }
 
-    /**
-     *
-     */
     @Test
     public void testFindPetByName() {
-
         String FIND_NAME = "Leo";
-
         List<Pet> petsExpected = TObjectCreator.getPetsForFindByName();
 
         Mockito.when(this.repository.findByName(FIND_NAME))
                 .thenReturn(petsExpected);
 
         List<Pet> pets = this.petService.findByName(FIND_NAME);
-
         assertEquals(petsExpected.size(), pets.size());
     }
 
-    /**
-     *
-     */
     @Test
     public void testFindPetByTypeId() {
-
         int TYPE_ID = 5;
-
         List<Pet> petsExpected = TObjectCreator.getPetsForFindByTypeId();
 
         Mockito.when(this.repository.findByTypeId(TYPE_ID))
                 .thenReturn(petsExpected);
 
         List<Pet> pets = this.petService.findByTypeId(TYPE_ID);
-
         assertEquals(petsExpected.size(), pets.size());
     }
 
-    /**
-     *
-     */
     @Test
     public void testFindPetByOwnerId() {
-
         int OWNER_ID = 10;
-
         List<Pet> petsExpected = TObjectCreator.getPetsForFindByOwnerId();
 
         Mockito.when(this.repository.findByOwnerId(OWNER_ID))
                 .thenReturn(petsExpected);
 
         List<Pet> pets = this.petService.findByOwnerId(OWNER_ID);
-
         assertEquals(petsExpected.size(), pets.size());
-
     }
 
-    /**
-     * To get ID generate , you need
-     * setup in id primary key in your
-     * entity this annotation :
-     *
-     * @GeneratedValue(strategy = GenerationType.IDENTITY)
-     */
     @Test
     public void testCreatePet() {
-
         Pet newPet = TObjectCreator.newPet();
         Pet newCreatePet = TObjectCreator.newPetCreated();
 
@@ -131,23 +97,14 @@ public class PetServiceMockitoTest {
                 .thenReturn(newCreatePet);
 
         Pet petCreated = this.petService.create(newPet);
-
-        log.info("Pet created : {}" , petCreated);
-
         assertNotNull(petCreated.getId());
         assertEquals(newCreatePet.getName(), petCreated.getName());
         assertEquals(newCreatePet.getOwnerId(), petCreated.getOwnerId());
         assertEquals(newCreatePet.getTypeId(), petCreated.getTypeId());
-
     }
 
-
-    /**
-     *
-     */
     @Test
     public void testUpdatePet() {
-
         String UP_PET_NAME = "Bear2";
         int UP_OWNER_ID = 2;
         int UP_TYPE_ID = 2;
@@ -155,55 +112,35 @@ public class PetServiceMockitoTest {
         Pet newPet = TObjectCreator.newPetForUpdate();
         Pet newPetCreate = TObjectCreator.newPetCreatedForUpdate();
 
-        // ------------ Create ---------------
-
         Mockito.when(this.repository.save(newPet))
                 .thenReturn(newPetCreate);
 
         Pet petCreated = this.petService.create(newPet);
-        log.info("{}" , petCreated);
 
-        // ------------ Update ---------------
-
-        // Prepare data for update
         petCreated.setName(UP_PET_NAME);
         petCreated.setOwnerId(UP_OWNER_ID);
         petCreated.setTypeId(UP_TYPE_ID);
 
         Pet newUpdate = petCreated;
         
-        // Create
         Mockito.when(this.repository.save(petCreated))
                 .thenReturn(newUpdate);
 
-        // Execute update
-        Pet upgradePet = this.petService.update(petCreated);
-        log.info("{}" + upgradePet);
-
-        //            EXPECTED           ACTUAL
-        assertEquals(UP_PET_NAME, upgradePet.getName());
-        assertEquals(UP_OWNER_ID, upgradePet.getTypeId());
-        assertEquals(UP_TYPE_ID, upgradePet.getOwnerId());
+        Pet upgradedPet = this.petService.update(petCreated);
+        assertEquals(UP_PET_NAME, upgradedPet.getName());
+        assertEquals(UP_OWNER_ID, upgradedPet.getOwnerId());
+        assertEquals(UP_TYPE_ID, upgradedPet.getTypeId());
     }
 
-    /**
-     *
-     */
     @Test
     public void testDeletePet() {
-
         Pet newPet = TObjectCreator.newPetForDelete();
         Pet newPetCreate = TObjectCreator.newPetCreatedForDelete();
-
-        // ------------ Create ---------------
 
         Mockito.when(this.repository.save(newPet))
                 .thenReturn(newPetCreate);
 
         Pet petCreated = this.petService.create(newPet);
-        log.info("{}" ,petCreated);
-
-        // ------------ Delete ---------------
 
         Mockito.doNothing().when(this.repository).delete(newPetCreate);
         Mockito.when(this.repository.findById(newPetCreate.getId()))
@@ -215,18 +152,14 @@ public class PetServiceMockitoTest {
             fail(e.getMessage());
         }
 
-        // ------------ Validate ---------------
-
         Mockito.when(this.repository.findById(newPetCreate.getId()))
                 .thenReturn(Optional.ofNullable(null));
 
         try {
             this.petService.findById(petCreated.getId());
-            assertTrue(false);
+            assertTrue(false); // Este debe fallar si el pet sigue existiendo
         } catch (PetNotFoundException e) {
-            assertTrue(true);
+            assertTrue(true); // Este pasará si la excepción es lanzada correctamente
         }
-
     }
-
 }
